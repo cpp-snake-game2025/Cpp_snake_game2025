@@ -4,6 +4,31 @@
 
 ---
 
+## ✅ 실행 방법
+
+### 1. 저장소 클론  
+```bash  
+git clone https://github.com/rooo-t/Cpp-snake_game.git  
+cd Cpp-snake_game  
+
+2. ncurses 설치 (Ubuntu 기준)
+
+sudo apt update  
+sudo apt install libncurses5-dev libncursesw5-dev  
+
+3. 빌드
+
+make clean  
+make  
+
+4. 실행
+
+./snake  
+
+```
+---
+
+
 ## 🔧 주요 기능 설계
 
 ### 🗺️ **1. Map 설계**
@@ -40,3 +65,5 @@
 - **박혜민**
 - **문세빈**
 - **문근호**
+
+
