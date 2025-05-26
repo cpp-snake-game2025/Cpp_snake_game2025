@@ -15,7 +15,7 @@ class GateManager
 {
 public:
     GateManager(int maxY, int maxX);
-    void setGates(const std::vector<std::vector<int>> &map);
+    void setGates(std::vector<std::vector<int>>& map);
     void draw(int offsetY, int offsetX) const;
 
     bool isGate(int y, int x) const;

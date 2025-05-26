@@ -9,7 +9,7 @@ GateManager::GateManager(int y, int x) : maxY(y), maxX(x)
     srand(time(nullptr));
 }
 
-void GateManager::setGates(const std::vector<std::vector<int>> &map)
+void GateManager::setGates(std::vector<std::vector<int>>& map)
 {
     std::vector<std::pair<int, int>> wallList;
 
@@ -21,6 +21,7 @@ void GateManager::setGates(const std::vector<std::vector<int>> &map)
                 wallList.emplace_back(y, x);
         }
     }
+
 
     if (wallList.size() < 2)
         return;
@@ -34,12 +35,17 @@ void GateManager::setGates(const std::vector<std::vector<int>> &map)
 
     gateA = wallList[idx1];
     gateB = wallList[idx2];
+
+    map[gateA.first][gateA.second] = 7;
+    map[gateB.first][gateB.second] = 7;
 }
 
 void GateManager::draw(int offsetY, int offsetX) const
 {
-    mvaddch(offsetY + gateA.first, offsetX + gateA.second, 'A');
-    mvaddch(offsetY + gateB.first, offsetX + gateB.second, 'B');
+    attron(COLOR_PAIR(2));
+    mvaddch(offsetY + gateA.first, offsetX + gateA.second, 'G');
+    mvaddch(offsetY + gateB.first, offsetX + gateB.second, 'G');
+    attroff(COLOR_PAIR(2));
 }
 
 bool GateManager::isGate(int y, int x) const

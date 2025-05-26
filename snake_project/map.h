@@ -8,7 +8,7 @@ class GameMap
 {
 public:
     GameMap();
-    const std::vector<std::vector<int>> &getMap() const;
+    std::vector<std::vector<int>> &getMap();
     int getWidth() const;
     int getHeight() const;
     void setSnake();
