@@ -8,8 +8,9 @@
 
 ### 1. 저장소 클론  
 ```bash  
-git clone https://github.com/rooo-t/Cpp-snake_game.git  
-cd Cpp-snake_game  
+git clone https://github.com/cpp-snake-game2025/Cpp_snake_game2025.git
+cd Cpp_snake_game2025
+
 
 2. ncurses 설치 (Ubuntu 기준)
 
