@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <ctime>
 
+
 ItemManager::ItemManager(int y, int x)
     : maxY(y), maxX(x)
 {
@@ -37,7 +38,14 @@ void ItemManager::placeItems(const std::vector<std::vector<int>> &map, int maxCo
             }
         if (overlap)
             continue;
-        ItemType t = (rand() % 2 == 0 ? GROWTH : POISON);
+        int r = rand() % 3; // 0, 1, 2 중 하나
+        ItemType t;
+        if (r == 0)
+            t = GROWTH; // 33% 확률로 성장 아이템
+        else if (r == 1)
+            t = POISON; // 33% 확률로 독 아이템
+        else
+            t = DOUBLE_EFFECT; // 33% 확률로 효과 두 배 아이템
         items.push_back({y, x, t, time(nullptr)});
     }
 }
@@ -46,8 +54,42 @@ void ItemManager::draw(int offsetY, int offsetX) const
 {
     for (auto &it : items)
     {
-        char ch = it.type == GROWTH ? '+' : '-';
+        char ch;
+        switch (it.type)
+        {
+        case GROWTH:
+            ch = '+';
+            attron(COLOR_PAIR(3)); // Growth item color
+            break;
+        case POISON:
+            ch = '-';
+            attron(COLOR_PAIR(4)); // Poison item color
+            break;
+        case DOUBLE_EFFECT:
+            ch = '*';
+            attron(COLOR_PAIR(5)); // DOUBLE_EFFECT 아이템 색상
+            break;
+        default:
+            ch = '?';
+            break;
+        }
+
         mvaddch(offsetY + it.y, offsetX + it.x, ch);
+        // 아이템별로 사용한 색상쌍을 해제
+        switch (it.type)
+        {
+        case GROWTH:
+            attroff(COLOR_PAIR(3));
+            break;
+        case POISON:
+            attroff(COLOR_PAIR(4));
+            break;
+        case DOUBLE_EFFECT:
+            attroff(COLOR_PAIR(5));
+            break;
+        default:
+            break;
+        }
     }
 }
 

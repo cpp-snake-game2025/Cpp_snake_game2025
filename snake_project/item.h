@@ -7,7 +7,8 @@
 enum ItemType
 {
     GROWTH = 5,
-    POISON = 6
+    POISON = 6,
+    DOUBLE_EFFECT = 8 // 아이템 효과 두 배
 };
 
 class ItemManager
@@ -20,6 +21,7 @@ public:
     ItemType checkItem(int y, int x) const;
     void removeItemAt(int y, int x);
     int getItemCount() const;
+    
 
 private:
     struct Item

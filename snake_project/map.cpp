@@ -15,13 +15,9 @@ GameMap::GameMap()
 
     // Immune Wall (모서리)
     map[0][0] = map[0][width - 1] = map[height - 1][0] = map[height - 1][width - 1] = 2;
-
-    // Gate: 벽(경계) 위치에 배치
-    map[5][0] = 7;         // 왼쪽 벽
-    map[5][width - 1] = 7; // 오른쪽 벽
 }
 
-const std::vector<std::vector<int>> &GameMap::getMap() const
+std::vector<std::vector<int>> &GameMap::getMap()
 {
     return map;
 }
@@ -60,9 +56,6 @@ void GameMap::draw(int offsetY, int offsetX) const
             case 4:
                 addch('o');
                 break;
-            case 7:
-                addch('G');
-                break; // Gate
             default:
                 addch('?');
                 break;

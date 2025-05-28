@@ -28,6 +28,11 @@ void ScoreBoard::setTime(int seconds)
     elapsed = seconds;
 }
 
+void ScoreBoard::setEffectTime(int doubleEffectDuration)
+{
+    feverTime = doubleEffectDuration;
+}
+
 void ScoreBoard::draw(int y, int x) const
 {
     mvprintw(y, x, "[ Score ]");
@@ -36,4 +41,19 @@ void ScoreBoard::draw(int y, int x) const
     mvprintw(y + 3, x, "-: %d", poison);
     mvprintw(y + 4, x, "G: %d", gateCount);
     mvprintw(y + 6, x, "T: %d s", elapsed);
+
+    if(feverTime > 0)
+    {
+        attron(COLOR_PAIR(6));
+
+        mvprintw(y + 8, x, "+---------------+");
+        
+        if(feverTime % 2 == 0)
+        {
+            mvprintw(y + 9, x, "   Fever Time!  ");
+        }
+        mvprintw(y +10, x, "+---------------+");
+
+        attroff(COLOR_PAIR(6));
+    }
 }
