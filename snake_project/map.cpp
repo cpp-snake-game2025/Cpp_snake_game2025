@@ -49,20 +49,30 @@ void GameMap::draw(int offsetY, int offsetX) const
                 addch(' ');
                 break;
             case 1:
-                addch('#');
+                attron(COLOR_PAIR(6));
+                addch(' ' | A_REVERSE);
+                attroff(COLOR_PAIR(6));
                 break;
             case 2:
-                addch('X');
+                attron(COLOR_PAIR(6));
+                addch(' ' | A_REVERSE);
+                attroff(COLOR_PAIR(6));
                 break;
             case 3:
-                addch('H');
+                attron(COLOR_PAIR(4));
+                addch(' ' | A_REVERSE);
+                attroff(COLOR_PAIR(4));
                 break;
             case 4:
-                addch('o');
+                attron(COLOR_PAIR(3));
+                addch(' ' | A_REVERSE);
+                attroff(COLOR_PAIR(3));
                 break;
             case 7:
-                addch('G');
-                break; // Gate
+                attron(COLOR_PAIR(5));
+                addch(' ' | A_REVERSE);
+                attroff(COLOR_PAIR(5));
+                break;
             default:
                 addch('?');
                 break;
@@ -70,3 +80,4 @@ void GameMap::draw(int offsetY, int offsetX) const
         }
     }
 }
+
