@@ -97,12 +97,23 @@ void Snake::draw(int oY, int oX) const
 {
     for (size_t i = 0; i < body.size(); ++i)
     {
-        attron(COLOR_PAIR(1));
-        mvaddch(oY + body[i].first, oX + body[i].second,
-                (i == 0 ? 'H' : 'o'));
-        attroff(COLOR_PAIR(1));
+        if (i == 0)
+            attron(COLOR_PAIR(4)); // 머리: 흰 배경
+        else
+            attron(COLOR_PAIR(3)); // 몸통: 하늘 배경
+
+        mvaddch(oY + body[i].first, oX + body[i].second, ' '); // 공백으로 네모처럼 표시
+
+        if (i == 0)
+            attroff(COLOR_PAIR(4));
+        else
+            attroff(COLOR_PAIR(3));
     }
 }
 
 int Snake::getLength() const { return body.size(); }
 int Snake::getMaxLength() const { return maxLengthSeen; }
+
+const std::deque<std::pair<int, int>>& Snake::getBody() const {
+    return body;
+}

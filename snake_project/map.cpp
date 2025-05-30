@@ -45,16 +45,24 @@ void GameMap::draw(int offsetY, int offsetX) const
                 addch(' ');
                 break;
             case 1:
-                addch('#');
+                attron(COLOR_PAIR(6));         // 일반 Wall 색상 (보라)
+                addch(' ');                    // 공백 네모로 표시
+                attroff(COLOR_PAIR(6));
                 break;
             case 2:
-                addch('X');
+                attron(COLOR_PAIR(5));         // Immune Wall 색상 (노랑)
+                addch(' ');                    // 공백 네모로 표시
+                attroff(COLOR_PAIR(5));
                 break;
             case 3:
-                addch('H');
+                attron(COLOR_PAIR(4));         // Snake Head (흰색)
+                addch(' ');
+                attroff(COLOR_PAIR(4));
                 break;
             case 4:
-                addch('o');
+                attron(COLOR_PAIR(3));         // Snake Body (하늘색)
+                addch(' ');
+                attroff(COLOR_PAIR(3));
                 break;
             default:
                 addch('?');
@@ -63,3 +71,4 @@ void GameMap::draw(int offsetY, int offsetX) const
         }
     }
 }
+

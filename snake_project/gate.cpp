@@ -42,10 +42,10 @@ void GateManager::setGates(std::vector<std::vector<int>>& map)
 
 void GateManager::draw(int offsetY, int offsetX) const
 {
-    attron(COLOR_PAIR(2));
-    mvaddch(offsetY + gateA.first, offsetX + gateA.second, 'G');
-    mvaddch(offsetY + gateB.first, offsetX + gateB.second, 'G');
-    attroff(COLOR_PAIR(2));
+    attron(COLOR_PAIR(8));
+    mvaddch(offsetY + gateA.first, offsetX + gateA.second, ' ');
+    mvaddch(offsetY + gateB.first, offsetX + gateB.second, ' ');
+    attroff(COLOR_PAIR(8));
 }
 
 bool GateManager::isGate(int y, int x) const

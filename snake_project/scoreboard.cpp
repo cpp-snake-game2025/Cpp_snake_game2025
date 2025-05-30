@@ -44,7 +44,7 @@ void ScoreBoard::draw(int y, int x) const
 
     if(feverTime > 0)
     {
-        attron(COLOR_PAIR(6));
+        attron(COLOR_PAIR(9));
 
         mvprintw(y + 8, x, "+---------------+");
         
@@ -54,6 +54,6 @@ void ScoreBoard::draw(int y, int x) const
         }
         mvprintw(y +10, x, "+---------------+");
 
-        attroff(COLOR_PAIR(6));
+        attroff(COLOR_PAIR(9));
     }
 }

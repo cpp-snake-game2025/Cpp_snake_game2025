@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <ctime>
+#include "snake.h"
 enum ItemType
 {
     GROWTH = 5,
@@ -15,8 +16,8 @@ class ItemManager
 {
 public:
     ItemManager(int maxY, int maxX);
-    void update();
-    void placeItems(const std::vector<std::vector<int>> &map, int maxCount = 3);
+    void update(const std::vector<std::vector<int>> &map, const Snake &snake);
+    void placeItems(const std::vector<std::vector<int>> &map, const Snake &snake, int maxCount);
     void draw(int offsetY, int offsetX) const;
     ItemType checkItem(int y, int x) const;
     void removeItemAt(int y, int x);
@@ -31,6 +32,7 @@ private:
         time_t spawnTime;
     };
     std::vector<Item> items;
+    time_t lastResetTime;
     int maxY, maxX;
 };
 
