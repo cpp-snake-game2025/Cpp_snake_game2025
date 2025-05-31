@@ -4,118 +4,194 @@
 #include <ncurses.h>
 #include "snake.h"
 
-GateManager::GateManager(int y, int x) : maxY(y), maxX(x)
+GateManager::GateManager(int y, int x)
+    : maxY(y), maxX(x), gateA({-1, -1}), gateB({-1, -1})
 {
-    srand(time(nullptr));
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 }
 
-void GateManager::setGates(std::vector<std::vector<int>>& map)
+void GateManager::setGates(const std::vector<std::vector<int>> &mapData)
 {
     std::vector<std::pair<int, int>> wallList;
 
-    for (int y = 0; y < maxY; ++y)
+    // 맵 전체에서 벽(값 1)을 찾아 wallList에 추가
+    for (int yy = 0; yy < maxY; ++yy)
     {
-        for (int x = 0; x < maxX; ++x)
+        for (int xx = 0; xx < maxX; ++xx)
         {
-            if (map[y][x] == 1)
-                wallList.emplace_back(y, x);
+            if (mapData[yy][xx] == 1)
+            {
+                wallList.emplace_back(yy, xx);
+            }
         }
     }
 
-
-    if (wallList.size() < 2)
-        return;
-
-    int idx1 = rand() % wallList.size();
-    int idx2;
-    do
+    // wallList에서 무작위로 두 개 선택
+    if (wallList.size() >= 2)
     {
-        idx2 = rand() % wallList.size();
-    } while (idx2 == idx1);
-
-    gateA = wallList[idx1];
-    gateB = wallList[idx2];
-
-    map[gateA.first][gateA.second] = 7;
-    map[gateB.first][gateB.second] = 7;
-}
-
-void GateManager::draw(int offsetY, int offsetX) const
-{
-    attron(COLOR_PAIR(8));
-    mvaddch(offsetY + gateA.first, offsetX + gateA.second, ' ');
-    mvaddch(offsetY + gateB.first, offsetX + gateB.second, ' ');
-    attroff(COLOR_PAIR(8));
+        int idxA = rand() % wallList.size();
+        gateA = wallList[idxA];
+        int idxB;
+        do
+        {
+            idxB = rand() % wallList.size();
+        } while (idxB == idxA);
+        gateB = wallList[idxB];
+    }
+    else
+    {
+        // 벽이 충분하지 않으면 gateA/B를 무효 상태로 둠
+        gateA = {-1, -1};
+        gateB = {-1, -1};
+    }
 }
 
 bool GateManager::isGate(int y, int x) const
 {
-    return (gateA == std::make_pair(y, x) || gateB == std::make_pair(y, x));
+    return (y == gateA.first && x == gateA.second) ||
+           (y == gateB.first && x == gateB.second);
 }
 
 GateRole GateManager::getGateRole(int y, int x) const
 {
-    if (gateA == std::make_pair(y, x))
+    if (y == gateA.first && x == gateA.second)
         return ENTER;
-    if (gateB == std::make_pair(y, x))
-        return ENTER;
+    if (y == gateB.first && x == gateB.second)
+        return EXIT;
     return NONE;
 }
 
 std::pair<int, int> GateManager::getExitGate(int y, int x) const
 {
-    return (gateA == std::make_pair(y, x)) ? gateB : gateA;
+    if (y == gateA.first && x == gateA.second)
+        return gateB;
+    else
+        return gateA;
 }
 
-bool GateManager::isOuterWall(int y, int x) const
+int GateManager::getExitDirection(int enterDir,
+                                  int exitY,
+                                  int exitX,
+                                  const std::vector<std::vector<int>> &mapData) const
 {
-    return (y == 0 || y == maxY - 1 || x == 0 || x == maxX - 1);
-}
+    // 1) 맵 경계에 있는 게이트: 무조건 안쪽
+    if (exitY == 0)
+        return DOWN;
+    if (exitY == maxY - 1)
+        return UP;
+    if (exitX == 0)
+        return RIGHT;
+    if (exitX == maxX - 1)
+        return LEFT;
 
-// 방향 우선순위: 동일 → 시계 → 반시계 → 반대
-int GateManager::getExitDirection(int enterDir, int y, int x, const std::vector<std::vector<int>> &map)
-{
-    std::vector<std::pair<int, int>> dirs = {
-        {-1, 0}, {1, 0}, {0, -1}, {0, 1} // UP, DOWN, LEFT, RIGHT
-    };
-    std::vector<int> order;
-
-    if (isOuterWall(y, x))
+    // 2) 경계가 아닌 경우: enterDir → 시계 → 반시계 → 역방향 순서
+    auto canMove = [&](int dir)
     {
-        if (y == 0)
-            return DOWN;
-        if (y == maxY - 1)
-            return UP;
-        if (x == 0)
-            return RIGHT;
-        if (x == maxX - 1)
-            return LEFT;
-    }
+        int ny = exitY;
+        int nx = exitX;
+        switch (dir)
+        {
+        case UP:
+            ny -= 1;
+            break;
+        case DOWN:
+            ny += 1;
+            break;
+        case LEFT:
+            nx -= 1;
+            break;
+        case RIGHT:
+            nx += 1;
+            break;
+        }
+        if (ny < 0 || ny >= maxY || nx < 0 || nx >= maxX)
+            return false;
+        if (mapData[ny][nx] == 2) // Immune Wall
+            return false;
+        return true;
+    };
 
-    // 중심부 gate인 경우
+    if (canMove(enterDir))
+        return enterDir;
+
+    int clockDir;
     switch (enterDir)
     {
     case UP:
-        order = {UP, RIGHT, LEFT, DOWN};
-        break;
-    case DOWN:
-        order = {DOWN, LEFT, RIGHT, UP};
-        break;
-    case LEFT:
-        order = {LEFT, UP, DOWN, RIGHT};
+        clockDir = RIGHT;
         break;
     case RIGHT:
-        order = {RIGHT, DOWN, UP, LEFT};
+        clockDir = DOWN;
+        break;
+    case DOWN:
+        clockDir = LEFT;
+        break;
+    case LEFT:
+        clockDir = UP;
+        break;
+    default:
+        clockDir = UP;
         break;
     }
+    if (canMove(clockDir))
+        return clockDir;
 
-    for (int d : order)
+    int counterDir;
+    switch (enterDir)
     {
-        int ny = y + dirs[d].first;
-        int nx = x + dirs[d].second;
-        if (map[ny][nx] == 0)
-            return d;
+    case UP:
+        counterDir = LEFT;
+        break;
+    case LEFT:
+        counterDir = DOWN;
+        break;
+    case DOWN:
+        counterDir = RIGHT;
+        break;
+    case RIGHT:
+        counterDir = UP;
+        break;
+    default:
+        counterDir = UP;
+        break;
     }
+    if (canMove(counterDir))
+        return counterDir;
 
-    return enterDir; // fallback
+    int opposite;
+    switch (enterDir)
+    {
+    case UP:
+        opposite = DOWN;
+        break;
+    case DOWN:
+        opposite = UP;
+        break;
+    case LEFT:
+        opposite = RIGHT;
+        break;
+    case RIGHT:
+        opposite = LEFT;
+        break;
+    default:
+        opposite = UP;
+        break;
+    }
+    return opposite;
+}
+
+void GateManager::draw(int offsetY, int offsetX) const
+{
+    if (gateA.first >= 0 && gateA.second >= 0)
+    {
+        attron(COLOR_PAIR(8));
+        mvprintw(gateA.first + offsetY, gateA.second + offsetX, " ");
+        attroff(COLOR_PAIR(8));
+    }
+    if (gateB.first >= 0 && gateB.second >= 0)
+    {
+        attron(COLOR_PAIR(8));
+        mvprintw(gateB.first + offsetY, gateB.second + offsetX, " ");
+        attroff(COLOR_PAIR(8));
+    }
 }

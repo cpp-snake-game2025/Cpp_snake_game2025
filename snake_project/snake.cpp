@@ -13,9 +13,9 @@ Snake::Snake(int y, int x)
 
 void Snake::setDirection(Direction d) // 현재 뱀의 이동 방향 (dir), 새로 설정하려는 방향 (d)을 인자로 받는 함수
 {
-    //if ((dir == UP && d == DOWN) || (dir == DOWN && d == UP) ||
-    //    (dir == LEFT && d == RIGHT) || (dir == RIGHT && d == LEFT)) 
-    //    return;
+    // if ((dir == UP && d == DOWN) || (dir == DOWN && d == UP) ||
+    //     (dir == LEFT && d == RIGHT) || (dir == RIGHT && d == LEFT))
+    //     return;
     dir = d;
 }
 
@@ -40,7 +40,7 @@ void Snake::move(bool grow)
         x++;
         break;
     }
-    
+
     body.push_front({y, x});
 
     if (!grow)
@@ -49,8 +49,10 @@ void Snake::move(bool grow)
         maxLengthSeen = body.size();
 }
 
-void Snake::growAtTail() {
-    if (body.size() < 2) return; // 몸이 너무 짧으면 무시
+void Snake::growAtTail()
+{
+    if (body.size() < 2)
+        return; // 몸이 너무 짧으면 무시
 
     auto tail = body.back();
     auto beforeTail = body[body.size() - 2];
@@ -114,6 +116,7 @@ void Snake::draw(int oY, int oX) const
 int Snake::getLength() const { return body.size(); }
 int Snake::getMaxLength() const { return maxLengthSeen; }
 
-const std::deque<std::pair<int, int>>& Snake::getBody() const {
+const std::deque<std::pair<int, int>> &Snake::getBody() const
+{
     return body;
 }
