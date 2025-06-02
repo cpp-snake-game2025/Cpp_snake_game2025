@@ -17,7 +17,7 @@ public:
     void draw(int y, int x) const;
 
     // ─── 미션 관련 멤버 추가 ───
-    // Stage용 목표 설정: growth, poison, gate, 그리고 B(길이)
+    // Stage용 목표 설정: growth, poison, gate, 그리고 B(길이 목표)
     void setGoals(int g, int p, int gate, int lengthGoal = 0);
     // 현재값 증가
     void increaseGrowth();
@@ -49,7 +49,7 @@ private:
     int curGate = 0;    // 현재 사용한 Gate 개수
     // ──────────────────────────
 
-    // 내부용: 체크문자 반환 (ASCII 'V' 또는 'X')
+    // 내부용: 체크문자 반환 (ASCII 'V' 혹은 'X')
     std::string check(bool condition) const
     {
         return condition ? "V" : "X";

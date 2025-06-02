@@ -1,4 +1,3 @@
-// main.cpp
 #include <ncurses.h> // 콘솔 UI 라이브러리
 #include <unistd.h>  // usleep
 #include <ctime>     // time
@@ -117,7 +116,7 @@ bool runStage1(const std::string &filename, ScoreBoard &score)
 
     Snake snake(5, 5);
     ItemManager itemManager(gameMap.getHeight(), gameMap.getWidth());
-    GateManager gateManager(gameMap.getHeight(), gameMap.getWidth());
+    GateManager gateManager;
 
     bool gateSpawned = false;
     int growthCount = 0, poisonCount = 0, gateUsed = 0;
@@ -217,30 +216,29 @@ bool runStage1(const std::string &filename, ScoreBoard &score)
 
         usleep(delay);
         snake.move();
-
         auto head = snake.getHead();
-        const auto &grid = gameMap.getMap();
 
-        // ─── (1) 게이트／문 통과 처리 ───
+        // ─── 수정: 게이트 먼저 검사 ───
         if (gateSpawned && gateManager.isGate(head.first, head.second))
         {
             int enterDir = snake.getDirection();
             auto exitG = gateManager.getExitGate(head.first, head.second);
-            int exitDir = gateManager.getExitDirection(enterDir, exitG.first, exitG.second, grid);
+            int exitDir = gateManager.getExitDirection(enterDir, exitG.first, exitG.second, gameMap.getMap());
 
             snake.teleport(exitG.first, exitG.second);
             snake.setDirection(static_cast<Direction>(exitDir));
 
             gateUsed++;
             score.increaseGate();
-            continue; // “게이트 통과” 후 다시 루프 시작
+            continue;
         }
-        // ────────────────────────────────
+        // ──────────────────────────────
 
-        // ─── (2) 벽 충돌 검사 ───
-        // 맵 상에서 값이 1인 위치(벽)과 겹칠 때 게임 오버
+        // ─── 수정: 벽 충돌 검사 ───
+        const auto &grid = gameMap.getMap();
         if (grid[head.first][head.second] == 1)
         {
+            // 벽 충돌 → Game Over
             attron(COLOR_PAIR(9));
             mvprintw(23, 2, "Game Over: The snake hit a wall!");
             attroff(COLOR_PAIR(9));
@@ -250,9 +248,9 @@ bool runStage1(const std::string &filename, ScoreBoard &score)
             timeout(0);
             return false;
         }
-        // ───────────────────────────
+        // ────────────────────────────
 
-        // ─── (3) 아이템 처리 ───
+        // 아이템 처리
         ItemType t = itemManager.checkItem(head.first, head.second);
         if (t == DOUBLE_EFFECT)
         {
@@ -288,7 +286,7 @@ bool runStage1(const std::string &filename, ScoreBoard &score)
         if (doubleEffectDuration > 0)
             doubleEffectDuration--;
 
-        // ─── (4) 자기 몸 또는 경계 충돌 검사 ───
+        // ─── 기존 벽/자기 충돌 검사 (자기 몸 충돌 포함) ───
         if (snake.checkCollision(gameMap.getHeight(), gameMap.getWidth()))
         {
             bool hitBoundary = (head.first <= 0 || head.first >= gameMap.getHeight() - 1 ||
@@ -311,7 +309,7 @@ bool runStage1(const std::string &filename, ScoreBoard &score)
             timeout(0);
             return false;
         }
-        // ───────────────────────────────────
+        // ──────────────────────────────────────────────
     }
 }
 
@@ -330,8 +328,7 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
 
     Snake snake(5, 5);
     ItemManager itemManager(gameMap.getHeight(), gameMap.getWidth());
-    GateManager gateManager(gameMap.getHeight(), gameMap.getWidth());
-
+    GateManager gateManager;
     bool gateSpawned = false;
     int growthCount = 0, poisonCount = 0, gateUsed = 0;
     int doubleEffectDuration = 0;
@@ -435,16 +432,14 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
 
         usleep(delay);
         snake.move();
-
         auto head = snake.getHead();
-        const auto &grid = gameMap.getMap();
 
-        // ─── (1) 게이트 통과 처리 ───
+        // ─── 수정: 게이트 먼저 검사 ───
         if (gateSpawned && gateManager.isGate(head.first, head.second))
         {
             int enterDir = snake.getDirection();
             auto exitG = gateManager.getExitGate(head.first, head.second);
-            int exitDir = gateManager.getExitDirection(enterDir, exitG.first, exitG.second, grid);
+            int exitDir = gateManager.getExitDirection(enterDir, exitG.first, exitG.second, gameMap.getMap());
 
             snake.teleport(exitG.first, exitG.second);
             snake.setDirection(static_cast<Direction>(exitDir));
@@ -453,11 +448,13 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
             score.increaseGate();
             continue;
         }
-        // ────────────────────────────
+        // ──────────────────────────────
 
-        // ─── (2) 벽 충돌 검사 ───
-        if (grid[head.first][head.second] == 1)
+        // ─── 수정: 벽 충돌 검사 ───
+        const auto &grid2 = gameMap.getMap();
+        if (grid2[head.first][head.second] == 1)
         {
+            // 벽 충돌 → Game Over
             attron(COLOR_PAIR(9));
             mvprintw(23, 2, "Game Over: The snake hit a wall!");
             attroff(COLOR_PAIR(9));
@@ -467,9 +464,9 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
             timeout(0);
             return false;
         }
-        // ──────────────────────────
+        // ────────────────────────────
 
-        // ─── (3) 아이템 처리 ───
+        // 아이템 처리
         ItemType t = itemManager.checkItem(head.first, head.second);
         if (t == DOUBLE_EFFECT)
         {
@@ -505,7 +502,7 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
         if (doubleEffectDuration > 0)
             doubleEffectDuration--;
 
-        // ─── (4) 자기 몸 또는 경계 충돌 검사 ──────────
+        // ─── 기존 벽/자기 충돌 검사 (자기 몸 충돌 포함) ───
         if (snake.checkCollision(gameMap.getHeight(), gameMap.getWidth()))
         {
             bool hitBoundary = (head.first <= 0 || head.first >= gameMap.getHeight() - 1 ||
@@ -528,7 +525,7 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
             timeout(0);
             return false;
         }
-        // ───────────────────────────────────────────
+        // ──────────────────────────────────────────────
     }
 }
 

@@ -1,8 +1,6 @@
 #include "scoreboard.h"
 #include <ncurses.h>
 
-// 기존 draw() 함수는 그대로 두고, drawMissions()만 수정되었습니다.
-
 void ScoreBoard::setLength(int cur, int max)
 {
     curLen = cur;
@@ -89,16 +87,16 @@ void ScoreBoard::resetCurrentMissions()
     curGrowth = 0;
     curPoison = 0;
     curGate = 0;
-    // goalB는 그대로 두고, 길이만 curLen을 비교합니다.
+    // goalB는 그대로 유지 (길이 목표는 curLen >= goalB로 비교)
 }
 
 void ScoreBoard::drawMissions(int y, int x) const
 {
-    // ─── “MISSION” 타이틀과 테두리 ───
-    mvprintw(y, x, " +-------------+ ");
-    mvprintw(y + 1, x, " |   MISSION   | ");
-    mvprintw(y + 2, x, " +-------------+ ");
-    // ──────────────────────────────────
+    // ─── “MISSION” 타이틀 표시 ───
+    mvprintw(y, x, "+-------------+");
+    mvprintw(y + 1, x, "|   MISSION   |");
+    mvprintw(y + 2, x, "+-------------+");
+    // ────────────────────────────
 
     int line = y + 3;
 
@@ -106,20 +104,20 @@ void ScoreBoard::drawMissions(int y, int x) const
     if (goalB > 0)
     {
         bool doneB = (curLen >= goalB);
-        mvprintw(line, x, " B: %d [%s]", goalB, check(doneB).c_str());
-        line += 1;
+        // “현재길이/목표길이 [V/X]” 형태
+        mvprintw(line, x, "B: %d/%d [%s]", curLen, goalB, check(doneB).c_str());
+        line++;
     }
 
     mvprintw(line, x, "+: %d [%s]", goalGrowth,
              check(curGrowth >= goalGrowth).c_str());
-    line += 1;
+    line++;
 
     mvprintw(line, x, "-: %d [%s]", goalPoison,
              check(curPoison >= goalPoison).c_str());
-    line += 1;
+    line++;
 
     mvprintw(line, x, "G: %d [%s]", goalGate,
              check(curGate >= goalGate).c_str());
+    // ────────────────────────────
 }
-
-// ──────────────────────────────────
