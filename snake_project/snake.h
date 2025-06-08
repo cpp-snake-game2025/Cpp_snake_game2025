@@ -28,7 +28,7 @@ public:
     void draw(int offsetY, int offsetX) const;
     int getLength() const;
     int getMaxLength() const;
-    const std::deque<std::pair<int, int>>& getBody() const;
+    const std::deque<std::pair<int, int>> &getBody() const;
 
 private:
     std::deque<std::pair<int, int>> body;

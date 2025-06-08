@@ -1,35 +1,36 @@
-// map.cpp
 #include "map.h"
 #include <ncurses.h>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iostream> // cerr 사용
 
-GameMap::GameMap()
+GameMap::GameMap(const std::string &filename)
 {
-    width = 21;
-    height = 21;
-    map.assign(height, std::vector<int>(width, 0));
+    std::ifstream in(filename);
+    if (!in.is_open())
+    {
+        std::cerr << "Error: Cannot open map file '" << filename << "'\n";
+        height = 0;
+        width = 0;
+        return;
+    }
 
-    for (int y = 0; y < height; ++y)
-        for (int x = 0; x < width; ++x)
-            if (y == 0 || y == height - 1 || x == 0 || x == width - 1)
-                map[y][x] = 1; // 일반 Wall
-
-    // Immune Wall (모서리)
-    map[0][0] = map[0][width - 1] = map[height - 1][0] = map[height - 1][width - 1] = 2;
-}
-
-std::vector<std::vector<int>> &GameMap::getMap()
-{
-    return map;
-}
-
-int GameMap::getWidth() const { return width; }
-int GameMap::getHeight() const { return height; }
-
-void GameMap::setSnake()
-{
-    map[5][5] = 3; // Snake Head
-    map[5][4] = 4; // Snake Body
-    map[5][3] = 4;
+    std::string line;
+    std::vector<int> row;
+    while (std::getline(in, line))
+    {
+        row.clear();
+        std::istringstream iss(line);
+        int x;
+        while (iss >> x)
+        {
+            row.push_back(x);
+        }
+        grid.push_back(row);
+    }
+    height = static_cast<int>(grid.size());
+    width = static_cast<int>(grid.empty() ? 0 : grid[0].size());
 }
 
 void GameMap::draw(int offsetY, int offsetX) const
@@ -38,37 +39,55 @@ void GameMap::draw(int offsetY, int offsetX) const
     {
         for (int x = 0; x < width; ++x)
         {
-            move(offsetY + y, offsetX + x);
-            switch (map[y][x])
+            int cell = grid[y][x];
+            int screenY = y + offsetY;
+            int screenX = x + offsetX;
+            switch (cell)
             {
-            case 0:
-                addch(' ');
+            case 0: // 빈 공간
+                mvprintw(screenY, screenX, " ");
                 break;
-            case 1:
-                attron(COLOR_PAIR(6));         // 일반 Wall 색상 (보라)
-                addch(' ');                    // 공백 네모로 표시
+            case 1: // Wall
+                attron(COLOR_PAIR(6));
+                mvprintw(screenY, screenX, " ");
                 attroff(COLOR_PAIR(6));
                 break;
-            case 2:
-                attron(COLOR_PAIR(5));         // Immune Wall 색상 (노랑)
-                addch(' ');                    // 공백 네모로 표시
+            case 2: // Immune Wall
+                attron(COLOR_PAIR(5));
+                mvprintw(screenY, screenX, " ");
                 attroff(COLOR_PAIR(5));
                 break;
-            case 3:
-                attron(COLOR_PAIR(4));         // Snake Head (흰색)
-                addch(' ');
-                attroff(COLOR_PAIR(4));
+            case 5: // Growth Item
+                attron(COLOR_PAIR(1));
+                mvprintw(screenY, screenX, " ");
+                attroff(COLOR_PAIR(1));
                 break;
-            case 4:
-                attron(COLOR_PAIR(3));         // Snake Body (하늘색)
-                addch(' ');
-                attroff(COLOR_PAIR(3));
+            case 6: // Poison Item
+                attron(COLOR_PAIR(2));
+                mvprintw(screenY, screenX, " ");
+                attroff(COLOR_PAIR(2));
+                break;
+            case 7: // Gate (단순히 map 상에 표시만 필요 없는 경우도 있으므로, 여기선 무시)
                 break;
             default:
-                addch('?');
+                mvprintw(screenY, screenX, "?");
                 break;
             }
         }
     }
 }
 
+int GameMap::getHeight() const
+{
+    return height;
+}
+
+int GameMap::getWidth() const
+{
+    return width;
+}
+
+const std::vector<std::vector<int>> &GameMap::getMap() const
+{
+    return grid;
+}
