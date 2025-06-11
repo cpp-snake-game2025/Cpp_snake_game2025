@@ -529,6 +529,239 @@ bool runStage2(const std::string &filename, ScoreBoard &score)
     }
 }
 
+// ─── Stage 3 실행 함수 ─────────────────────────────────
+// filename: "map_stage3.txt" 등 스테이지3 맵 파일명
+bool runStage3(const std::string &filename, ScoreBoard &score)
+{
+    GameMap gameMap(filename);
+    if (gameMap.getHeight() <= 0 || gameMap.getWidth() <= 0)
+    {
+        mvprintw(1, 2, "Failed to load map '%s'.", filename.c_str());
+        refresh();
+        getch();
+        return false;
+    }
+
+    Snake snake(5, 5);
+    ItemManager itemManager(gameMap.getHeight(), gameMap.getWidth());
+    GateManager gateManager;
+    bool gateSpawned = false;
+    int growthCount = 0, poisonCount = 0, gateUsed = 0;
+    int doubleEffectDuration = 0;
+    const int delay = 250000; // 250 ms
+    time_t startTime = std::time(nullptr);
+
+    while (true)
+    {
+        clear();
+        gameMap.draw(1, 2);
+        snake.draw(1, 2);
+        itemManager.update(gameMap.getMap(), snake);
+        itemManager.draw(1, 2);
+
+        int elapsed = static_cast<int>(std::time(nullptr) - startTime);
+
+        if (!gateSpawned && elapsed >= 10)
+        {
+            gateManager.setGates(gameMap.getMap());
+            gateSpawned = true;
+        }
+        if (gateSpawned)
+            gateManager.draw(1, 2);
+
+        // ScoreBoard 업데이트
+        score.setLength(snake.getLength(), snake.getMaxLength());
+        score.setGrowth(growthCount);
+        score.setPoison(poisonCount);
+        score.setGate(gateUsed);
+        score.setTime(elapsed);
+        score.setEffectTime(doubleEffectDuration);
+
+        // 점수판 & 미션 그리기 (B 포함)
+        score.draw(1, 30);
+        score.drawMissions(13, 30);
+        refresh();
+
+        // Stage 3 클리어 조건: + ≥ 5, - ≥ 5, G ≥ 3, 뱀 길이 ≥ 9
+        if (growthCount >= 5 &&
+            poisonCount >= 5 &&
+            gateUsed >= 3 &&
+            snake.getLength() >= 9)
+        {
+            return true;
+        }
+
+        int ch = getch();
+        Direction dir = snake.getDirection();
+
+        switch (ch)
+        {
+        case KEY_UP:
+            if (dir == DOWN)
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit its own body!");
+                attroff(COLOR_PAIR(9));
+                refresh();
+                return false;
+            }
+            snake.setDirection(UP);
+            break;
+        case KEY_DOWN:
+            if (dir == UP)
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit its own body!");
+                attroff(COLOR_PAIR(9));
+                refresh();
+                return false;
+            }
+            snake.setDirection(DOWN);
+            break;
+        case KEY_LEFT:
+            if (dir == RIGHT)
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit its own body!");
+                attroff(COLOR_PAIR(9));
+                refresh();
+                return false;
+            }
+            snake.setDirection(LEFT);
+            break;
+        case KEY_RIGHT:
+            if (dir == LEFT)
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit its own body!");
+                attroff(COLOR_PAIR(9));
+                refresh();
+                return false;
+            }
+            snake.setDirection(RIGHT);
+            break;
+        case 'q':
+            return false;
+        default:
+            break;
+        }
+
+        usleep(delay);
+        snake.move();
+        auto head = snake.getHead();
+
+        // ─── 수정: 게이트 먼저 검사 ───
+        if (gateSpawned && gateManager.isGate(head.first, head.second))
+        {
+            int enterDir = snake.getDirection();
+            auto exitG = gateManager.getExitGate(head.first, head.second);
+            int exitDir = gateManager.getExitDirection(enterDir, exitG.first, exitG.second, gameMap.getMap());
+
+            snake.teleport(exitG.first, exitG.second);
+            snake.setDirection(static_cast<Direction>(exitDir));
+
+            // 게이트 출구 방향의 다음 칸이 벽인지 체크
+            static const int dy[4] = {-1, 1, 0, 0}; // UP, DOWN, LEFT, RIGHT
+            static const int dx[4] = {0, 0, -1, 1};
+            int ny = exitG.first + dy[exitDir];
+            int nx = exitG.second + dx[exitDir];
+            const auto &grid = gameMap.getMap();
+            if (ny < 0 || ny >= gameMap.getHeight() || nx < 0 || nx >= gameMap.getWidth() || grid[ny][nx] == 1) {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit a wall after gate!");
+                attroff(COLOR_PAIR(9));
+                refresh();
+                timeout(-1);
+                getch();
+                timeout(0);
+                return false;
+            }
+
+            gateUsed++;
+            score.increaseGate();
+            continue;
+        }
+        // ──────────────────────────────
+
+        // ─── 수정: 벽 충돌 검사 ───
+        const auto &grid2 = gameMap.getMap();
+        if (grid2[head.first][head.second] == 1)
+        {
+            // 벽 충돌 → Game Over
+            attron(COLOR_PAIR(9));
+            mvprintw(23, 2, "Game Over: The snake hit a wall!");
+            attroff(COLOR_PAIR(9));
+            refresh();
+            timeout(-1);
+            getch();
+            timeout(0);
+            return false;
+        }
+        // ────────────────────────────
+
+        // 아이템 처리
+        ItemType t = itemManager.checkItem(head.first, head.second);
+        if (t == DOUBLE_EFFECT)
+        {
+            doubleEffectDuration = 40;
+            itemManager.removeItemAt(head.first, head.second);
+        }
+        else if (t == GROWTH)
+        {
+            int inc = (doubleEffectDuration > 0) ? 2 : 1;
+            growthCount += inc;
+            for (int i = 0; i < inc; ++i)
+                snake.growAtTail();
+            itemManager.removeItemAt(head.first, head.second);
+            score.increaseGrowth();
+            if (inc == 2)
+                score.increaseGrowth();
+        }
+        else if (t == POISON)
+        {
+            poisonCount++;
+            itemManager.removeItemAt(head.first, head.second);
+            if (!snake.shrink())
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake is poisoned!");
+                attroff(COLOR_PAIR(9));
+                refresh();
+                return false;
+            }
+            score.increasePoison();
+        }
+
+        if (doubleEffectDuration > 0)
+            doubleEffectDuration--;
+
+        // ─── 기존 벽/자기 충돌 검사 (자기 몸 충돌 포함) ───
+        if (snake.checkCollision(gameMap.getHeight(), gameMap.getWidth()))
+        {
+            bool hitBoundary = (head.first <= 0 || head.first >= gameMap.getHeight() - 1 ||
+                                head.second <= 0 || head.second >= gameMap.getWidth() - 1);
+            if (hitBoundary)
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit the boundary!");
+                attroff(COLOR_PAIR(9));
+            }
+            else
+            {
+                attron(COLOR_PAIR(9));
+                mvprintw(23, 2, "Game Over: The snake hit its own body!");
+                attroff(COLOR_PAIR(9));
+            }
+            refresh();
+            timeout(-1);
+            getch();
+            timeout(0);
+            return false;
+        }
+        // ──────────────────────────────────────────────
+    }
+}
+
 // ─── 프로그램 시작 ───────────────────────────────────────
 int main()
 {
@@ -606,7 +839,15 @@ int main()
                     // ─── Stage 2 목표 재설정 ───
                     score.setGoals(3, 3, 3, 7);
                     score.resetCurrentMissions();
-                    runStage2("map_stage2.txt", score);
+                    bool cleared2 = runStage2("map_stage2.txt", score);
+
+                    if (cleared2)
+                    {
+                        // ─── Stage 3 목표 재설정 ───
+                        score.setGoals(5, 5, 3, 9);
+                        score.resetCurrentMissions();
+                        bool cleared3 = runStage3("map_stage3.txt", score);
+                    }
                 }
             }
             else if (choice == 1) // Game Manual

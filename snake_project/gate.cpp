@@ -38,6 +38,15 @@ void GateManager::setGates(const std::vector<std::vector<int>> &grid)
                 continue;
             }
 
+            // 꼭짓점 네 자리 제외
+            if ((y == 0 && x == 0) ||
+                (y == 0 && x == width - 1) ||
+                (y == height - 1 && x == 0) ||
+                (y == height - 1 && x == width - 1))
+            {
+                continue;
+            }
+
             // 중앙 영역이 아니라면 후보에 추가
             candidates.emplace_back(y, x);
         }
