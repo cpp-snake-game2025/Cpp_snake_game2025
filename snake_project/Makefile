@@ -1,27 +1,23 @@
 snake: main.o map.o scoreboard.o snake.o item.o gate.o
-	g++ -o snake main.o map.o scoreboard.o snake.o item.o gate.o -lncurses
-
-item.o: item.cpp item.h
-	g++ -c item.cpp
-
-
+	g++ -std=c++11 -o snake main.o map.o scoreboard.o snake.o item.o gate.o -lncurses
 
 main.o: main.cpp map.h scoreboard.h
-	g++ -c main.cpp
+	g++ -std=c++11 -c main.cpp
 
 map.o: map.cpp map.h
-	g++ -c map.cpp
+	g++ -std=c++11 -c map.cpp
 
 scoreboard.o: scoreboard.cpp scoreboard.h
-	g++ -c scoreboard.cpp
+	g++ -std=c++11 -c scoreboard.cpp
+
+snake.o: snake.cpp snake.h
+	g++ -std=c++11 -c snake.cpp
+
+item.o: item.cpp item.h
+	g++ -std=c++11 -c item.cpp
+
+gate.o: gate.cpp gate.h
+	g++ -std=c++11 -c gate.cpp
 
 clean:
 	rm -f *.o snake
-
-snake.o: snake.cpp snake.h
-	g++ -c snake.cpp
-
-gate.o: gate.cpp gate.h
-	g++ -c gate.cpp
-
-

@@ -11,11 +11,11 @@ Snake::Snake(int y, int x)
     maxLengthSeen = body.size();
 }
 
-void Snake::setDirection(Direction d)
+void Snake::setDirection(Direction d) // 현재 뱀의 이동 방향 (dir), 새로 설정하려는 방향 (d)을 인자로 받는 함수
 {
-    if ((dir == UP && d == DOWN) || (dir == DOWN && d == UP) ||
-        (dir == LEFT && d == RIGHT) || (dir == RIGHT && d == LEFT))
-        return;
+    // if ((dir == UP && d == DOWN) || (dir == DOWN && d == UP) ||
+    //     (dir == LEFT && d == RIGHT) || (dir == RIGHT && d == LEFT))
+    //     return;
     dir = d;
 }
 
@@ -40,11 +40,32 @@ void Snake::move(bool grow)
         x++;
         break;
     }
+
     body.push_front({y, x});
+
     if (!grow)
         body.pop_back();
     if ((int)body.size() > maxLengthSeen)
         maxLengthSeen = body.size();
+}
+
+void Snake::growAtTail()
+{
+    if (body.size() < 2)
+        return; // 몸이 너무 짧으면 무시
+
+    auto tail = body.back();
+    auto beforeTail = body[body.size() - 2];
+
+    // 꼬리 방향 벡터 계산
+    int dy = tail.first - beforeTail.first;
+    int dx = tail.second - beforeTail.second;
+
+    // 꼬리 뒤 위치는 꼬리 + (꼬리 - beforeTail)
+    int newTailY = tail.first + dy;
+    int newTailX = tail.second + dx;
+
+    body.push_back({newTailY, newTailX});
 }
 
 void Snake::teleport(int newY, int newX)
@@ -78,10 +99,24 @@ void Snake::draw(int oY, int oX) const
 {
     for (size_t i = 0; i < body.size(); ++i)
     {
-        mvaddch(oY + body[i].first, oX + body[i].second,
-                (i == 0 ? 'H' : 'o'));
+        if (i == 0)
+            attron(COLOR_PAIR(4)); // 머리: 흰 배경
+        else
+            attron(COLOR_PAIR(3)); // 몸통: 하늘 배경
+
+        mvaddch(oY + body[i].first, oX + body[i].second, ' '); // 공백으로 네모처럼 표시
+
+        if (i == 0)
+            attroff(COLOR_PAIR(4));
+        else
+            attroff(COLOR_PAIR(3));
     }
 }
 
 int Snake::getLength() const { return body.size(); }
 int Snake::getMaxLength() const { return maxLengthSeen; }
+
+const std::deque<std::pair<int, int>> &Snake::getBody() const
+{
+    return body;
+}
