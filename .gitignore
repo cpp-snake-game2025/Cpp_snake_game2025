@@ -1,3 +1,6 @@
 # 빌드 결과물
 *.o
 snake
+
+.vscode/
+.DS_Store
